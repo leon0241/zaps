@@ -29,7 +29,7 @@ public class AdminCommand implements CommandExecutor {
         PluginConfig config = configManager.getSnapshot().pluginConfig();
         String sub = args[0].toLowerCase();
         switch (sub) {
-            case "reload" -> {
+            case "reload":
                 if (!sender.hasPermission(config.reloadPermission())) {
                     sender.sendMessage("You do not have permission to reload All the Webhooks.");
                     return true;
@@ -37,16 +37,14 @@ public class AdminCommand implements CommandExecutor {
                 plugin.reloadAllTheWebhooks();
                 sender.sendMessage("All the Webhooks reloaded.");
                 return true;
-            }
-            case "stats" -> {
+            case "stats":
                 if (!sender.hasPermission(config.statsPermission())) {
                     sender.sendMessage("You do not have permission to view stats.");
                     return true;
                 }
                 sendStats(sender, plugin.getStatsTracker());
                 return true;
-            }
-            case "docs" -> {
+            case "docs":
                 if (args.length < 2 || !"generate".equalsIgnoreCase(args[1])) {
                     sender.sendMessage("Usage: /allthewebhooks docs generate");
                     return true;
@@ -58,12 +56,10 @@ public class AdminCommand implements CommandExecutor {
                 plugin.getDocumentationGenerator().generateAsync();
                 sender.sendMessage("Documentation generation started.");
                 return true;
-            }
-            default -> {
+            default:
                 sender.sendMessage("Unknown subcommand. Use reload, stats, or docs generate.");
                 return true;
-            }
-        }
+    }
     }
 
     private void sendStats(CommandSender sender, StatsTracker stats) {

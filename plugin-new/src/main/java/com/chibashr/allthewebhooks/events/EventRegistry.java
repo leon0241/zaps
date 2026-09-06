@@ -226,18 +226,20 @@ public class EventRegistry {
                 List.of("entity.damage.*"),
                 "entity.damage.player:\n  message: player_damaged",
                 (EntityDamageEvent event) -> {
-                    if (!(event.getEntity() instanceof Player player)) {
-                        return null;
-                    }
-                    EventContext context = new EventContext("entity.damage.player");
-                    context.setPlayer(player);
-                    context.setWorld(player.getWorld());
-                    context.put("player.name", player.getName());
-                    context.put("player.uuid", player.getUniqueId().toString());
-                    context.put("damage.amount", event.getFinalDamage());
-                    context.put("damage.cause", event.getCause().name());
-                    context.put("world.name", player.getWorld().getName());
-                    return context;
+                        if (!(event.getEntity() instanceof Player)) {
+                                return null;
+                        }
+
+                        Player player = (Player) event.getEntity();
+                        EventContext context = new EventContext("entity.damage.player");
+                        context.setPlayer(player);
+                        context.setWorld(player.getWorld());
+                        context.put("player.name", player.getName());
+                        context.put("player.uuid", player.getUniqueId().toString());
+                        context.put("damage.amount", event.getFinalDamage());
+                        context.put("damage.cause", event.getCause().name());
+                        context.put("world.name", player.getWorld().getName());
+                        return context;
                 }
         ));
 
@@ -254,9 +256,11 @@ public class EventRegistry {
                 List.of("inventory.open.*"),
                 "inventory.open:\n  message: generic",
                 (InventoryOpenEvent event) -> {
-                    if (!(event.getPlayer() instanceof Player player)) {
-                        return null;
-                    }
+                        if (!(event.getPlayer() instanceof Player)) {
+                                return null;
+                        }
+
+                        Player player = (Player) event.getPlayer();
                     EventContext context = new EventContext("inventory.open");
                     context.setPlayer(player);
                     context.setWorld(player.getWorld());

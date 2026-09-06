@@ -21,14 +21,18 @@ public class RuleEngine {
 
     @SuppressWarnings("unchecked")
     private boolean evaluateCondition(Object fieldValue, Object condition) {
-        if (condition instanceof Map<?, ?> map) {
-            for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) map).entrySet()) {
+        if (condition instanceof Map<?, ?>) {
+            Map<?, ?> map = (Map<?, ?>) condition;
+
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
                 String operator = String.valueOf(entry.getKey());
                 Object value = entry.getValue();
+
                 if (!evaluateOperator(fieldValue, operator, value)) {
                     return false;
                 }
             }
+
             return true;
         }
         return evaluateOperator(fieldValue, "equals", condition);
@@ -58,8 +62,8 @@ public class RuleEngine {
     }
 
     private boolean matchesEquals(Object fieldValue, Object conditionValue) {
-        if (conditionValue instanceof List<?> list) {
-            for (Object item : list) {
+        if (conditionValue instanceof List<?>) {
+            for (Object item : (List<?>) conditionValue) {
                 if (matchesEquals(fieldValue, item)) {
                     return true;
                 }
@@ -79,7 +83,8 @@ public class RuleEngine {
     }
 
     private double toNumber(Object value) {
-        if (value instanceof Number number) {
+        if (value instanceof Number) {
+            Number number = (Number) value;
             return number.doubleValue();
         }
         if (value == null) {
