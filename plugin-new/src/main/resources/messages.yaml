@@ -1,0 +1,29 @@
+# All the Webhooks — Message Templates
+
+messages:
+  generic:
+    content: "{event.name} occurred"
+
+  player_join:
+    content: "**{player.name}** joined the server"
+
+  player_quit:
+    content: "**{player.name}** left the server"
+
+  block_break:
+    content: "{player.name} broke {block.type} at {block.location} in {world.name}"
+
+  generic_block_break:
+    content: "{player.name} broke a block in {world.name}"
+
+  player_damaged:
+    content: "{player.name} took {damage.amount} damage from {damage.cause}"
+
+  diamond_mined:
+    content: "Diamond Ore mined by {player.name} at {block.location} in {world.name}"
+
+  server_enable:
+    content: "Server **{server.name}** is up (version {server.minecraft_version})"
+
+  server_disable:
+    content: "Server **{server.name}** is shutting down ({server.reason})"
