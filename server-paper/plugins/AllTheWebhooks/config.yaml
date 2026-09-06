@@ -11,7 +11,7 @@ plugin:
 # Optional "username" sets the Discord display name for messages to this webhook.
 webhooks:
   default:
-    url: "https://webhook.site/51dbeef7-de05-406b-baf7-b2c53a22f25e"
+    url: "http://127.0.0.1:5000/webhook"
     timeout-ms: 5000
     # username: "Server Alerts"
 
