@@ -1,0 +1,40 @@
+# All the Webhooks — Message Templates
+
+# Optional "username" per message overrides the webhook display name for that message only.
+messages:
+  generic:
+    content: "{event.name} occurred"
+
+  player_join:
+    content: "**{player.name}** joined the server"
+    # username: "Join/Quit"   # optional
+
+  player_quit:
+    content: "**{player.name}** left the server"
+
+  block_break:
+    content: "{player.name} broke {block.type} at {block.location} in {world.name}"
+
+  generic_block_break:
+    content: "{player.name} broke a block in {world.name}"
+
+  player_death:
+    content: "**{player.name}** died in {world.name}"
+
+  lava_death:
+    content: "**{player.name}** tried to swim in lava in {world.name}"
+
+  player_damaged:
+    content: "{player.name} took {damage.amount} damage from {damage.cause}"
+
+  diamond_mined:
+    content: "Diamond Ore mined by {player.name} at {block.location} in {world.name}"
+
+  server_enable:
+    content: "Server **{server.name}** is up (version {server.minecraft_version})"
+
+  server_disable:
+    content: "Server **{server.name}** is shutting down ({server.reason})"
+
+  world_load:
+    content: "World **{world.name}** loaded (seed {world.seed}, {world.environment}, {world.difficulty})"
