@@ -1,3 +1,7 @@
 env/*
 server-fabric/*
+server-paper-1.16/*
 server-paper/*
+!server-paper/plugins
+!server-paper/start.sh
+!server-paper/server.jar
