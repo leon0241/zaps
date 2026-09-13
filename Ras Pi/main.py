@@ -1,5 +1,5 @@
 from zapper import Zapper, TerminalAllocator
-
+from time import sleep
 zapper = Zapper()
 terminal_allocoator = TerminalAllocator()
 
@@ -39,5 +39,19 @@ class Player:
         zapper.queue_small_zap(self.terminal, duration, self.username)
 
 
+
+def temp_test():
+    test_player = Player("test_player")
+    
+    
+    while True:
+        test_player.take_damage(5.5)
+        
+        sleep(2)
+        
+        test_player. take_damage(1)
+    
 if __name__ == "__main__":
     print("Hello World, I am a Zapper")
+    
+    temp_test()

@@ -2,17 +2,18 @@ from time import sleep
 import gpiozero as GPIO
 
 
-relay_pulse_seconds = 0.2
+relay_pulse_seconds = 1
 MAX_DURATION = 2.0
 
 terminals: dict[str, list[tuple[int, int]]] = {
-    "t1": [(0, 1), (2, 3)],
-    "t2": [(4, 5), (6, 7)],
+    #"t1": [(0, 1), (2, 3)],
+    # "t1": [(1, 2), (3, 4)],
+    #"t2": [(4, 5), (6, 7)],
     "t3": [(8, 9), (10, 11)],
     "t4": [(12, 13), (14, 15)],
     "t5": [(16, 17), (18, 19)],
     "t6": [(20, 21), (22, 23)],
-    "tX": [(24, 25), (24, 25)]
+    #"tX": [(24, 25), (24, 25)]
 }
 
 
@@ -20,25 +21,36 @@ class Relay:
 
     def __init__(self, pins):
         pin_a, pin_b = pins
+        self.pin_no_a = pin_a
+        self.pin_no_b = pin_b
         self.a = GPIO.DigitalOutputDevice(pin_a, initial_value=False)
         self.b = GPIO.DigitalOutputDevice(pin_b, initial_value=False)
         self.pulse_seconds = relay_pulse_seconds
 
     def coil_off(self):
         self.a.off()
+        # print(f"{self.pin_no_a}, off")
         self.b.off()
+        # print(f"{self.pin_no_b}, off")
 
     def drive_switch_off(self):
+        print(f"modifyingpins {self.pin_no_a}, {self.pin_no_b}")
         self.coil_off()
         self.a.off()
+        sleep(0.3)
+        print(f"{self.pin_no_a}, off")
         self.b.on()
+        print(f"{self.pin_no_b}, on")
         sleep(self.pulse_seconds)
         self.coil_off()
 
     def drive_switch_on(self):
         self.coil_off()
         self.b.off()
+        print(f"{self.pin_no_b}, off")
         self.a.on()
+        sleep(0.3)
+        print(f"{self.pin_no_a}, on")
         sleep(self.pulse_seconds)
         self.coil_off()
 
@@ -76,9 +88,11 @@ class Zapper:
     
     def apply_large_zap(self):
         zap_obj = self.large_zap_queue[0]
+        print("recived Zap request")
+        print(f"zap_obj: {zap_obj}")
         duration = zap_obj[1]
-        player_name = zap_obj[3]
-        relay = self.output_termnials[zap_obj[0]]
+        player_name = zap_obj[2]
+        relay = self.output_termnials[zap_obj[0]][0]
         
         result = self.apply_zap(relay, duration)
         
@@ -91,10 +105,12 @@ class Zapper:
 
         
     def apply_small_zap(self):
-            zap_obj = self.large_zap_queue[0]
+            zap_obj = self.small_zap_queue[0]
+            print("recived Zap request")
+            print(f"zap_obj: {zap_obj}")
             duration = zap_obj[1]
-            player_name = zap_obj[3]
-            relay = self.output_termnials[zap_obj[1]]
+            player_name = zap_obj[2]
+            relay = self.output_termnials[zap_obj[0]][1]
             
             result = self.apply_zap(relay, duration)
             
@@ -139,3 +155,22 @@ class TerminalAllocator:
 
         return terminal
 
+
+
+if __name__ == "__main__":
+    relay = Relay ((2,3))
+    
+    relay.a.on()
+    relay.b.off()
+    
+    while True:
+        print(f"pin {relay.pin_no_a} on")
+        print(f"pin {relay.pin_no_b} off")
+    
+    # while True:
+    #     print(f"relay on")
+    #     relay.drive_switch_on()
+    #     sleep(5)
+    #     print("relay off")
+    #     relay.drive_switch_off()
+    
