@@ -1,0 +1,6 @@
+name: mc-webhooks
+version: '1.0-SNAPSHOT'
+main: io.github.leon0241.mcwebhooks.Mc_webhooks
+api-version: '1.16'
+author: Leon
+contributors: ['L', 'Luke', 'Louis', 'Aaron', 'Miki']
