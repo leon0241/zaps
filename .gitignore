@@ -2,6 +2,13 @@ env/*
 server-fabric/*
 server-paper-1.16/*
 server-paper/*
+mc-webhooks/.gradle/*
+mc-webhooks/.idea/*
+mc-webhooks/gradle/wrapper/*
 !server-paper/plugins
 !server-paper/start.sh
 !server-paper/server.jar
+!server-paper-1.16/plugins
+!server-paper-1.16/start.sh
+!server-paper-1.16/plugin.sh
+!server-paper-1.16/server.jar
