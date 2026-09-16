@@ -3,6 +3,8 @@ from pythonosc.udp_client import SimpleUDPClient
 
 app = Flask(__name__)
 
+counter = 0
+
 
 # Blast with Tens Unit
 def tens_send():
@@ -11,15 +13,26 @@ def tens_send():
 
 # OSC Send
 def osc_send():
+    global counter
     ip = "127.0.0.1"
     port = 8001
 
-    client = SimpleUDPClient(ip, port)  # Create client
+    # client = SimpleUDPClient(ip, port)  # Create client
 
-    client.send_message("/eos/key/go_0", "")  # Send float message
+    # client.send_message("/eos/key/go_0", "")  # Send float message
 
-    print("OSC ping")
+    counter += 1
+
+    # print("OSC ping")
+    print(counter)
+    print()
     return
+
+
+@app.route("/")
+def hello_world():
+    global counter
+    return "<h1 style='font-size: 100'>Total Hits: " + str(counter) + "<h1>"
 
 
 @app.route("/webhook", methods=["POST"])
