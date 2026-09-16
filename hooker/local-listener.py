@@ -1,30 +1,48 @@
-import time
-import webhook_listener
+from flask import Flask, jsonify, request
+from pythonosc.udp_client import SimpleUDPClient
+
+app = Flask(__name__)
+
+counter = 0
 
 
-def process_post_request(request, *args, **kwargs):
-    print(
-        "Received request:\n"
-        + "Method: {}\n".format(request.method)
-        + "Headers: {}\n".format(request.headers)
-        + "Args (url path): {}\n".format(args)
-        + "Keyword Args (url parameters): {}\n".format(kwargs)
-        + "Body: {}".format(
-            request.body.read(int(request.headers["Content-Length"]))
-            if int(request.headers.get("Content-Length", 0)) > 0
-            else ""
-        )
-    )
-
-    # Process the request!
-    # ...
-
+# Blast with Tens Unit
+def tens_send():
     return
 
 
-webhooks = webhook_listener.Listener(handlers={"POST": process_post_request})
-webhooks.start()
+# OSC Send
+def osc_send():
+    global counter
+    ip = "127.0.0.1"
+    port = 8001
 
-while True:
-    print("Still alive...")
-    time.sleep(300)
+    # client = SimpleUDPClient(ip, port)  # Create client
+
+    # client.send_message("/eos/key/go_0", "")  # Send float message
+
+    counter += 1
+
+    # print("OSC ping")
+    print(counter)
+    print()
+    return
+
+
+@app.route("/")
+def hello_world():
+    global counter
+    return "<h1 style='font-size: 100'>Total Hits: " + str(counter) + "<h1>"
+
+
+@app.route("/webhook", methods=["POST"])
+def webhook_receiver():
+    data = request.json  # Get the JSON data from the incoming request
+    # Process the data and perform actions based on the event
+    print("Received webhook data:", data)
+    osc_send()
+    return jsonify({"message": "Webhook received successfully"}), 200
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
