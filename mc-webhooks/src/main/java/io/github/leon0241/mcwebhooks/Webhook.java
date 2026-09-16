@@ -10,10 +10,11 @@ import static org.bukkit.Bukkit.getLogger;
 public class Webhook {
 
     public void sendWebhook(String request) {
+        var url = "https://webhook.site/e9c14e38-82ea-4abb-892c-8cec0ded591f";
         HttpClient httpClient = HttpClient.newHttpClient();
 //            String json = new DiscordWebhookRequestDto(request).toJson();
         HttpRequest httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create("https://webhook.site/e9c14e38-82ea-4abb-892c-8cec0ded591f"))
+                .uri(URI.create(url))
                 .header("Content-Type", "application/json")
                 .method("POST", HttpRequest.BodyPublishers.ofString(request))
                 .build();
