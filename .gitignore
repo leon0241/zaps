@@ -5,6 +5,7 @@ server-paper/*
 mc-webhooks/.gradle/*
 mc-webhooks/.idea/*
 mc-webhooks/gradle/wrapper/*
+mc-webhooks/build/tmp/*
 !server-paper/plugins
 !server-paper/start.sh
 !server-paper/server.jar

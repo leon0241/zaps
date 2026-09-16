@@ -1,6 +1,7 @@
 package io.github.leon0241.mcwebhooks;
 
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -14,22 +15,30 @@ public final class DamageHandler implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerDamage(EntityDamageEvent event) {
-//        getLogger().info("Type1");
-//        getLogger().info(event.getCause().toString());
-
         // Only player events, and only non-entity attack events
         if(!event.getEntityType().equals(EntityType.PLAYER)) {
             return;
         } else if (event.getCause().toString().startsWith("ENTITY")){
-//            getLogger().info("entity");
             return;
         }
 
-        var damagedPlayer = event.getEntity().getName();
+        // Redefine living entity to get health
+        if (!(event.getEntity() instanceof LivingEntity)) return;
+        LivingEntity entity = (LivingEntity) event.getEntity();
+
+        // Extract info
+        var damagedPlayer = entity.getName();
         var source = event.getCause().toString();
         var damage = event.getFinalDamage();
 
-        var string = damagedPlayer + " took " + damage + " damage from " + source;
+        var string = "";
+        // On Death
+        if (event.getFinalDamage() > entity.getHealth()) {
+            string = damagedPlayer + " died from " + source;
+        // On not death
+        } else {
+            string = damagedPlayer + " took " + damage + " damage from " + source;
+        }
 
         webhook.sendWebhook(string);
         getLogger().info(string);
@@ -43,11 +52,22 @@ public final class DamageHandler implements Listener {
             return;
         }
 
-        var damagedPlayer = event.getEntity().getName();
+        // Redefine living entity and get health - if higher than final damage then death.
+        if (!(event.getEntity() instanceof LivingEntity)) return;
+        LivingEntity entity = (LivingEntity) event.getEntity();
+
+        var damagedPlayer = entity.getName();
         var damageeEntity = event.getDamager();
         var damage = event.getFinalDamage();
 
-        var string = damagedPlayer + " took " + damage + " damage from " + damageeEntity;
+        var string = "";
+        // On Death
+        if (event.getFinalDamage() > entity.getHealth()) {
+            string = damagedPlayer + " died from " + damageeEntity;
+            // On not death
+        } else {
+            string = damagedPlayer + " took " + damage + " damage from " + damageeEntity;
+        }
 
         webhook.sendWebhook(string);
 
