@@ -1,25 +1,33 @@
-from zapper import Zapper, TerminalAllocator
+from zapper import Relay
 from time import sleep
+import yaml
 zapper = Zapper()
 terminal_allocoator = TerminalAllocator()
+
+global_queue = []
+
+
 
 def calculate_zap_duration(damage, total_sustained_damage):
     #can be used to create a scaling hurt factor
     #stubbed for now
     return 1.0
+
+def get_relay(username):
+    players = {
+        "test":(0,1),
+        "test2":(2,3)
+    }
+    
+    gpio_pins = players.get(username, (13,14))
+    relay = Relay(gpio_pins)
+    return relay
+
+
 class Player:
     def __init__(self, username:str):
         self.username:str = username
-        self.terminal:str = terminal_allocoator.get_terminal()
-        self.in_play:bool = False
-        self.has_terminal:bool = False
-        if self.terminal != "tX":
-            self.has_terminal = True
-        self.sustained_damage:float = 0.0
-        self.total_large_zaps = 0
-        self.total_small_zaps = 0
-        print(f"{username} is using pins Terminal {self.terminal}")
-    
+        self.relay = get_relay(username)
     
     def take_damage(self, damage:float):
         duration = calculate_zap_duration(damage, self.sustained_damage)
@@ -40,6 +48,15 @@ class Player:
 
 
 
+def create_players():
+    with open("config.yaml") as stream:
+        try:
+            player_config = yaml.safe_load(stream)
+        except Exception as e:
+            print(e)
+    
+    
+    
 def temp_test():
     test_player = Player("test_player")
     
@@ -51,6 +68,13 @@ def temp_test():
         
         test_player. take_damage(1)
     
+
+def recive_webhook(webhook):
+    player_name = webhook.get("name")
+    damage = webhook.get("damage")
+    
+    
+
 if __name__ == "__main__":
     print("Hello World, I am a Zapper")
     
