@@ -1,4 +1,7 @@
 env/*
+hooker/__pycache__
+hooker/utils/__pycache__
+
 server-fabric/*
 server-paper-1.16/*
 server-paper/*
