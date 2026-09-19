@@ -26,11 +26,13 @@ class DryRunOutputDevice:
 
     def on(self) -> None:
         self.value = True
-        LOG.info("DRY RUN: GPIO %s on", self.pin)
+        physical_level = "HIGH" if self.active_high else "LOW"
+        LOG.info("DRY RUN: relay on, GPIO %s %s", self.pin, physical_level)
 
     def off(self) -> None:
         self.value = False
-        LOG.info("DRY RUN: GPIO %s off", self.pin)
+        physical_level = "LOW" if self.active_high else "HIGH"
+        LOG.info("DRY RUN: relay off, GPIO %s %s", self.pin, physical_level)
 
     def close(self) -> None:
         self.off()
@@ -50,7 +52,15 @@ class RelayController:
             settings.get("high_damage_threshold", 5.0),
             "settings.high_damage_threshold",
         )
-        self.active_high = bool(settings.get("active_high", False))
+        active_high = settings.get("active_high", False)
+        if type(active_high) is not bool:
+            raise ValueError("settings.active_high must be true or false")
+        if active_high:
+            raise ValueError(
+                "settings.active_high must be false so idle GPIOs are HIGH "
+                "and active relays pull GPIOs LOW"
+            )
+        self.active_high = active_high
         self._outputs: dict[str, list[Any]] = {}
         self._pulse_lock = threading.Lock()
 
@@ -74,10 +84,7 @@ class RelayController:
             settings.get("high_damage_pins"), "settings.high_damage_pins"
         )
         used_pins: set[int] = set(high_damage_pins)
-        self._high_damage_outputs = [
-            device_class(pin, active_high=self.active_high, initial_value=False)
-            for pin in high_damage_pins
-        ]
+        configured_names: dict[str, list[int]] = {}
         for name, pins in names.items():
             if not isinstance(name, str) or not name.strip():
                 raise ValueError("each configured name must be a non-empty string")
@@ -86,18 +93,24 @@ class RelayController:
             if duplicates:
                 raise ValueError(f"GPIO pins used more than once: {sorted(duplicates)}")
             used_pins.update(pins)
-            self._outputs[name] = [
-                device_class(
-                    pin, active_high=self.active_high, initial_value=False
-                )
-                for pin in pins
-            ]
+            configured_names[name] = pins
 
-        # Explicitly reset every configured relay output before accepting any
-        # webhook requests. This is intentionally limited to configured pins
-        # so unrelated GPIO peripherals are not disturbed.
+        # active_high=False means gpiozero relay on -> physical GPIO LOW, and
+        # relay off -> physical GPIO HIGH. Open every requested GPIO exactly
+        # once, including unused pins, and establish the safe idle HIGH state.
+        self._gpio_outputs = {
+            pin: device_class(pin, active_high=False, initial_value=False)
+            for pin in range(25)
+        }
+        self._high_damage_outputs = [
+            self._gpio_outputs[pin] for pin in high_damage_pins
+        ]
+        self._outputs = {
+            name: [self._gpio_outputs[pin] for pin in pins]
+            for name, pins in configured_names.items()
+        }
         self.all_off()
-        LOG.info("Set all configured GPIO relay pins to off")
+        LOG.info("Set GPIO pins 0-24 to HIGH (idle/relay off)")
 
     @property
     def names(self) -> list[str]:
@@ -146,17 +159,11 @@ class RelayController:
 
     def close(self) -> None:
         self.all_off()
-        for outputs in self._outputs.values():
-            for output in outputs:
-                output.close()
-        for output in self._high_damage_outputs:
+        for output in self._gpio_outputs.values():
             output.close()
 
     def all_off(self) -> None:
-        for outputs in self._outputs.values():
-            for output in outputs:
-                output.off()
-        for output in self._high_damage_outputs:
+        for output in self._gpio_outputs.values():
             output.off()
 
 
@@ -175,8 +182,8 @@ def positive_number(value: Any, field: str) -> float:
 def validate_pins(value: Any, field: str) -> list[int]:
     if not isinstance(value, list) or not value:
         raise ValueError(f"{field} must be a non-empty list")
-    if any(type(pin) is not int or pin < 0 for pin in value):
-        raise ValueError(f"{field} must contain non-negative integers")
+    if any(type(pin) is not int or not 0 <= pin <= 24 for pin in value):
+        raise ValueError(f"{field} must contain GPIO pin numbers from 0 to 24")
     if len(set(value)) != len(value):
         raise ValueError(f"{field} contains duplicate pins")
     return value
