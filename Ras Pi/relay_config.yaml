@@ -2,10 +2,11 @@
   "settings": {
     "seconds_per_damage": 0.1,
     "max_duration_seconds": 2.0,
+    "high_damage_threshold": 5.0,
+    "high_damage_pins": [4, 5],
     "active_high": false
   },
   "names": {
-    "test": [2,3],
-    "large_small":[4,5]
+    "test": [2, 3]
   }
 }

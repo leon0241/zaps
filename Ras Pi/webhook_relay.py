@@ -46,9 +46,13 @@ class RelayController:
             settings.get("max_duration_seconds", 2.0),
             "settings.max_duration_seconds",
         )
+        self.high_damage_threshold = positive_number(
+            settings.get("high_damage_threshold", 5.0),
+            "settings.high_damage_threshold",
+        )
         self.active_high = bool(settings.get("active_high", False))
         self._outputs: dict[str, list[Any]] = {}
-        self._locks: dict[str, threading.Lock] = {}
+        self._pulse_lock = threading.Lock()
 
         names = config.get("names")
         if not isinstance(names, dict) or not names:
@@ -66,19 +70,21 @@ class RelayController:
                 ) from exc
             device_class = DigitalOutputDevice
 
-        used_pins: set[int] = set()
+        high_damage_pins = validate_pins(
+            settings.get("high_damage_pins"), "settings.high_damage_pins"
+        )
+        used_pins: set[int] = set(high_damage_pins)
+        self._high_damage_outputs = [
+            device_class(pin, active_high=self.active_high, initial_value=False)
+            for pin in high_damage_pins
+        ]
         for name, pins in names.items():
             if not isinstance(name, str) or not name.strip():
                 raise ValueError("each configured name must be a non-empty string")
-            if not isinstance(pins, list) or not pins:
-                raise ValueError(f"pins for {name!r} must be a non-empty list")
-            if any(type(pin) is not int or pin < 0 for pin in pins):
-                raise ValueError(f"pins for {name!r} must be non-negative integers")
+            pins = validate_pins(pins, f"pins for {name!r}")
             duplicates = used_pins.intersection(pins)
             if duplicates:
                 raise ValueError(f"GPIO pins used more than once: {sorted(duplicates)}")
-            if len(set(pins)) != len(pins):
-                raise ValueError(f"pins for {name!r} contain duplicates")
             used_pins.update(pins)
             self._outputs[name] = [
                 device_class(
@@ -86,7 +92,6 @@ class RelayController:
                 )
                 for pin in pins
             ]
-            self._locks[name] = threading.Lock()
 
         # Explicitly reset every configured relay output before accepting any
         # webhook requests. This is intentionally limited to configured pins
@@ -108,23 +113,34 @@ class RelayController:
             raise ValueError("damage must be greater than zero")
 
         duration = self.max_duration if death else self.duration_for(damage)
-        # Serialize events for the same relay so one request cannot switch it off
-        # while another request is still using it.
-        with self._locks[name]:
+        high_damage = damage is not None and damage > self.high_damage_threshold
+        # The high/low selector is shared by every player, so serialize all
+        # pulses to prevent simultaneous events from selecting different modes.
+        with self._pulse_lock:
             outputs = self._outputs[name]
             LOG.info(
-                "Activating %s for %.3f seconds (death=%s, damage=%s)",
+                "Activating %s for %.3f seconds "
+                "(death=%s, damage=%s, high_damage=%s)",
                 name,
                 duration,
                 death,
                 damage,
+                high_damage,
             )
             try:
+                if high_damage:
+                    for output in self._high_damage_outputs:
+                        output.on()
+                else:
+                    for output in self._high_damage_outputs:
+                        output.off()
                 for output in outputs:
                     output.on()
                 threading.Event().wait(duration)
             finally:
                 for output in outputs:
+                    output.off()
+                for output in self._high_damage_outputs:
                     output.off()
         return duration
 
@@ -133,11 +149,15 @@ class RelayController:
         for outputs in self._outputs.values():
             for output in outputs:
                 output.close()
+        for output in self._high_damage_outputs:
+            output.close()
 
     def all_off(self) -> None:
         for outputs in self._outputs.values():
             for output in outputs:
                 output.off()
+        for output in self._high_damage_outputs:
+            output.off()
 
 
 def positive_number(value: Any, field: str) -> float:
@@ -150,6 +170,16 @@ def positive_number(value: Any, field: str) -> float:
     if number <= 0:
         raise ValueError(f"{field} must be a positive number")
     return number
+
+
+def validate_pins(value: Any, field: str) -> list[int]:
+    if not isinstance(value, list) or not value:
+        raise ValueError(f"{field} must be a non-empty list")
+    if any(type(pin) is not int or pin < 0 for pin in value):
+        raise ValueError(f"{field} must contain non-negative integers")
+    if len(set(value)) != len(value):
+        raise ValueError(f"{field} contains duplicate pins")
+    return value
 
 
 def load_config(path: Path) -> dict[str, Any]:
