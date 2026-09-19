@@ -1,0 +1,10 @@
+{
+  "settings": {
+    "seconds_per_damage": 0.1,
+    "max_duration_seconds": 2.0,
+    "active_high": false
+  },
+  "names": {
+    "test": [0, 1]
+  }
+}
