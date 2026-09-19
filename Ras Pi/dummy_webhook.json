@@ -1,4 +1,6 @@
 {
-  "name": "test",
-  "damage": 2.5
+  "Player": "test",
+  "Death": "false",
+  "Source": "ENTITY_ATTACK",
+  "Damage": 2.5
 }

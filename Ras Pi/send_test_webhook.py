@@ -29,14 +29,28 @@ def load_payload(path: Path) -> dict[str, Any]:
 
     if not isinstance(payload, dict):
         raise ValueError("dummy webhook data must be a JSON object")
-    if not isinstance(payload.get("name"), str) or not payload["name"]:
-        raise ValueError("dummy webhook 'name' must be a non-empty string")
-    damage = payload.get("damage")
-    if isinstance(damage, bool) or not isinstance(damage, (int, float)) or damage <= 0:
-        raise ValueError("dummy webhook 'damage' must be a positive number")
+    if not isinstance(payload.get("Player"), str) or not payload["Player"]:
+        raise ValueError("dummy webhook 'Player' must be a non-empty string")
+    if payload.get("Death") not in ("true", "false"):
+        raise ValueError('dummy webhook \'Death\' must be "true" or "false"')
+    if not isinstance(payload.get("Source"), str) or not payload["Source"]:
+        raise ValueError("dummy webhook 'Source' must be a non-empty string")
 
-    # Return only the fields emitted by the real damage webhook.
-    return {"name": payload["name"], "damage": damage}
+    result = {
+        "Player": payload["Player"],
+        "Death": payload["Death"],
+        "Source": payload["Source"],
+    }
+    if payload["Death"] == "false":
+        damage = payload.get("Damage")
+        if (
+            isinstance(damage, bool)
+            or not isinstance(damage, (int, float))
+            or damage <= 0
+        ):
+            raise ValueError("dummy webhook 'Damage' must be a positive number")
+        result["Damage"] = damage
+    return result
 
 
 def parse_args() -> argparse.Namespace:
@@ -52,9 +66,15 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_DATA_FILE,
         help="dummy webhook JSON file (default: next to this script)",
     )
-    parser.add_argument("--name", help="override the name in the data file")
+    parser.add_argument("--player", help="override Player in the data file")
+    parser.add_argument("--source", help="override Source in the data file")
     parser.add_argument(
-        "--damage", type=float, help="override the damage in the data file"
+        "--damage", type=float, help="override Damage for a non-death event"
+    )
+    parser.add_argument(
+        "--death",
+        action="store_true",
+        help='send a death event (Death="true" with no Damage field)',
     )
     parser.add_argument("--timeout", type=float, default=10.0)
     return parser.parse_args()
@@ -64,14 +84,23 @@ def main() -> int:
     args = parse_args()
     try:
         payload = load_payload(args.data)
-        if args.name is not None:
-            if not args.name:
-                raise ValueError("--name must not be empty")
-            payload["name"] = args.name
+        if args.player is not None:
+            if not args.player:
+                raise ValueError("--player must not be empty")
+            payload["Player"] = args.player
+        if args.source is not None:
+            if not args.source:
+                raise ValueError("--source must not be empty")
+            payload["Source"] = args.source
+        if args.death:
+            payload["Death"] = "true"
+            payload.pop("Damage", None)
         if args.damage is not None:
             if args.damage <= 0:
                 raise ValueError("--damage must be greater than zero")
-            payload["damage"] = args.damage
+            if payload["Death"] == "true":
+                raise ValueError("--damage cannot be used with a death event")
+            payload["Damage"] = args.damage
 
         encoded = json.dumps(payload, separators=(",", ":")).encode("utf-8")
         request = Request(

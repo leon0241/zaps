@@ -88,6 +88,12 @@ class RelayController:
             ]
             self._locks[name] = threading.Lock()
 
+        # Explicitly reset every configured relay output before accepting any
+        # webhook requests. This is intentionally limited to configured pins
+        # so unrelated GPIO peripherals are not disturbed.
+        self.all_off()
+        LOG.info("Set all configured GPIO relay pins to off")
+
     @property
     def names(self) -> list[str]:
         return sorted(self._outputs)
@@ -95,18 +101,24 @@ class RelayController:
     def duration_for(self, damage: float) -> float:
         return min(damage * self.seconds_per_damage, self.max_duration)
 
-    def pulse(self, name: str, damage: float) -> float:
+    def pulse(self, name: str, damage: float | None, *, death: bool = False) -> float:
         if name not in self._outputs:
             raise KeyError(name)
-        if damage <= 0:
+        if not death and (damage is None or damage <= 0):
             raise ValueError("damage must be greater than zero")
 
-        duration = self.duration_for(damage)
+        duration = self.max_duration if death else self.duration_for(damage)
         # Serialize events for the same relay so one request cannot switch it off
         # while another request is still using it.
         with self._locks[name]:
             outputs = self._outputs[name]
-            LOG.info("Activating %s for %.3f seconds (damage=%s)", name, duration, damage)
+            LOG.info(
+                "Activating %s for %.3f seconds (death=%s, damage=%s)",
+                name,
+                duration,
+                death,
+                damage,
+            )
             try:
                 for output in outputs:
                     output.on()
@@ -117,9 +129,15 @@ class RelayController:
         return duration
 
     def close(self) -> None:
+        self.all_off()
         for outputs in self._outputs.values():
             for output in outputs:
                 output.close()
+
+    def all_off(self) -> None:
+        for outputs in self._outputs.values():
+            for output in outputs:
+                output.off()
 
 
 def positive_number(value: Any, field: str) -> float:
@@ -169,13 +187,20 @@ def make_handler(controller: RelayController) -> type[BaseHTTPRequestHandler]:
                 payload = json.loads(self.rfile.read(length))
                 if not isinstance(payload, dict):
                     raise ValueError("JSON body must be an object")
-                name = payload.get("name")
-                if not isinstance(name, str) or not name:
-                    raise ValueError("name must be a non-empty string")
-                damage = positive_number(payload.get("damage"), "damage")
-                duration = controller.pulse(name, damage)
+                player = payload.get("Player")
+                if not isinstance(player, str) or not player:
+                    raise ValueError("Player must be a non-empty string")
+                death_value = payload.get("Death")
+                if death_value not in ("true", "false"):
+                    raise ValueError('Death must be the string "true" or "false"')
+                death = death_value == "true"
+                source = payload.get("Source")
+                if not isinstance(source, str) or not source:
+                    raise ValueError("Source must be a non-empty string")
+                damage = None if death else positive_number(payload.get("Damage"), "Damage")
+                duration = controller.pulse(player, damage, death=death)
             except KeyError:
-                self.send_json(404, {"error": "name is not configured"})
+                self.send_json(404, {"error": "Player is not configured"})
             except (ValueError, json.JSONDecodeError) as exc:
                 self.send_json(400, {"error": str(exc)})
             except Exception:
@@ -184,7 +209,14 @@ def make_handler(controller: RelayController) -> type[BaseHTTPRequestHandler]:
             else:
                 self.send_json(
                     200,
-                    {"status": "activated", "name": name, "duration": duration},
+                    {
+                        "status": "activated",
+                        "Player": player,
+                        "Death": death_value,
+                        "Source": source,
+                        "Damage": damage,
+                        "duration": duration,
+                    },
                 )
 
         def send_json(self, status: int, body: dict[str, Any]) -> None:

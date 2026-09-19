@@ -5,6 +5,7 @@
     "active_high": false
   },
   "names": {
-    "test": [0, 1]
+    "test": [2,3],
+    "large_small":[4,5]
   }
 }
