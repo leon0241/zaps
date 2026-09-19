@@ -1,8 +1,8 @@
 import gpiozero as GPIO
 import time
 
-pina = GPIO.output_device(2)
-pinb = GPIO.output_device(3)
+pina = GPIO.output_devices(2)
+pinb = GPIO.output_devices(3)
 def main():
     pina.off()
     pinb.off()
