@@ -7,6 +7,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.json.simple.JSONObject;
 
 import static org.bukkit.Bukkit.getLogger;
 
@@ -31,16 +32,25 @@ public final class DamageHandler implements Listener {
         var source = event.getCause().toString();
         var damage = event.getFinalDamage();
 
+        var jsonString = new JSONObject();
+
         var string = "";
         // On Death
         if (event.getFinalDamage() > entity.getHealth()) {
             string = damagedPlayer + " died from " + source;
+            jsonString.put("Player", damagedPlayer);
+            jsonString.put("Death", "true");
+            jsonString.put("Source", source);
         // On not death
         } else {
             string = damagedPlayer + " took " + damage + " damage from " + source;
+            jsonString.put("Player", damagedPlayer);
+            jsonString.put("Death", "false");
+            jsonString.put("Source", source);
+            jsonString.put("Damage", damage);
         }
 
-        webhook.sendWebhook(string);
+        webhook.sendWebhook(jsonString);
         getLogger().info(string);
         getLogger().info("");
     }
@@ -57,19 +67,29 @@ public final class DamageHandler implements Listener {
         LivingEntity entity = (LivingEntity) event.getEntity();
 
         var damagedPlayer = entity.getName();
-        var damageeEntity = event.getDamager();
+        var damageeEntity = event.getDamager().getName();
         var damage = event.getFinalDamage();
 
         var string = "";
+        var jsonString = new JSONObject();
+
         // On Death
         if (event.getFinalDamage() > entity.getHealth()) {
             string = damagedPlayer + " died from " + damageeEntity;
+            jsonString.put("Player", damagedPlayer);
+            jsonString.put("Death", "true");
+            jsonString.put("Source", damageeEntity);
             // On not death
         } else {
             string = damagedPlayer + " took " + damage + " damage from " + damageeEntity;
+            jsonString.put("Player", damagedPlayer);
+            jsonString.put("Death", "false");
+            jsonString.put("Source", damageeEntity);
+            jsonString.put("Damage", damage);
+
         }
 
-        webhook.sendWebhook(string);
+        webhook.sendWebhook(jsonString);
 
         getLogger().info(string);
         getLogger().info("");
