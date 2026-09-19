@@ -6,7 +6,11 @@ pinb = GPIO.OutputDevice(3)
 def main():
     pina.off()
     pinb.off()
-    time.sleep(60)
+    time.sleep(15)
+    pina.on()
+    pinb.on()
+    time.sleep(15)
 
 if __name__ == "__main__":
-    main()
+    while True:
+        main()
