@@ -17,9 +17,7 @@ public final class DamageHandler implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerDamage(EntityDamageEvent event) {
         // Only player events, and only non-entity attack events
-        if(!event.getEntityType().equals(EntityType.PLAYER)) {
-            return;
-        } else if (event.getCause().toString().startsWith("ENTITY")){
+        if (!event.getEntityType().equals(EntityType.PLAYER)) {
             return;
         }
 
@@ -27,70 +25,42 @@ public final class DamageHandler implements Listener {
         if (!(event.getEntity() instanceof LivingEntity)) return;
         LivingEntity entity = (LivingEntity) event.getEntity();
 
-        // Extract info
-        var damagedPlayer = entity.getName();
-        var source = event.getCause().toString();
-        var damage = event.getFinalDamage();
+        String damagedPlayer = entity.getName();
+        double damage = event.getFinalDamage();
+        String source;
 
-        var jsonString = new JSONObject();
+        if (event instanceof EntityDamageByEntityEvent) {
+            EntityDamageByEntityEvent entityEvent = (EntityDamageByEntityEvent) event;
+            source = entityEvent.getDamager().getName();
+            // entity-caused damage logic
+        } else {
+            EntityDamageEvent otherEvent = event;
+            source = otherEvent.getCause().toString();
+        }
 
-        var string = "";
-        // On Death
+        JSONObject jsonString = new JSONObject();
+
+        String string = "";
+
+        jsonString.put("Player", damagedPlayer);
+        jsonString.put("Source", source);
+
+
         if (event.getFinalDamage() > entity.getHealth()) {
+            // On Death
             string = damagedPlayer + " died from " + source;
-            jsonString.put("Player", damagedPlayer);
+
             jsonString.put("Death", "true");
-            jsonString.put("Source", source);
-        // On not death
+
         } else {
-            string = damagedPlayer + " took " + damage + " damage from " + source;
-            jsonString.put("Player", damagedPlayer);
-            jsonString.put("Death", "false");
-            jsonString.put("Source", source);
-            jsonString.put("Damage", damage);
-        }
-
-        webhook.sendWebhook(jsonString);
-        getLogger().info(string);
-        getLogger().info("");
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onEntityEntityDamage(EntityDamageByEntityEvent event) {
-//        getLogger().info("Type2");
-        if(!event.getEntityType().equals(EntityType.PLAYER)) {
-            return;
-        }
-
-        // Redefine living entity and get health - if higher than final damage then death.
-        if (!(event.getEntity() instanceof LivingEntity)) return;
-        LivingEntity entity = (LivingEntity) event.getEntity();
-
-        var damagedPlayer = entity.getName();
-        var damageeEntity = event.getDamager().getName();
-        var damage = event.getFinalDamage();
-
-        var string = "";
-        var jsonString = new JSONObject();
-
-        // On Death
-        if (event.getFinalDamage() > entity.getHealth()) {
-            string = damagedPlayer + " died from " + damageeEntity;
-            jsonString.put("Player", damagedPlayer);
-            jsonString.put("Death", "true");
-            jsonString.put("Source", damageeEntity);
             // On not death
-        } else {
-            string = damagedPlayer + " took " + damage + " damage from " + damageeEntity;
-            jsonString.put("Player", damagedPlayer);
-            jsonString.put("Death", "false");
-            jsonString.put("Source", damageeEntity);
-            jsonString.put("Damage", damage);
+            string = damagedPlayer + " took " + damage + " damage from " + source;
 
+            jsonString.put("Death", "false");
+            jsonString.put("Damage", damage);
         }
 
         webhook.sendWebhook(jsonString);
-
         getLogger().info(string);
         getLogger().info("");
     }
