@@ -12,7 +12,8 @@ import static org.bukkit.Bukkit.getLogger;
 public class Webhook {
 
     public void sendWebhook(JSONObject request) {
-        var url = "http://127.0.0.1:5000/webhook";
+        var url = "http://192.168.0.81:5000/webhook";
+        var url2 = "http://192.168.0.81:8080/webhook";
         getLogger().info(url);
         getLogger().info(request.toJSONString());
 
