@@ -11,20 +11,24 @@ import static org.bukkit.Bukkit.getLogger;
 
 public class Webhook {
 
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+
     public void sendWebhook(JSONObject request) {
-        var url = "http://127.0.0.1:5000/webhook";
-        HttpClient httpClient = HttpClient.newHttpClient();
-//            String json = new DiscordWebhookRequestDto(request).toJson();
+        sendTo("http://127.0.0.1:5000/webhook", request);
+        sendTo("http://192.168.0.81:8080/webhook", request); // second request
+    }
+
+    private void sendTo(String url, JSONObject request) {
         HttpRequest httpRequest = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .header("Content-Type", "application/json")
-                .method("POST", HttpRequest.BodyPublishers.ofString(request.toJSONString()))
+                .POST(HttpRequest.BodyPublishers.ofString(request.toJSONString()))
                 .build();
-        httpClient.sendAsync(
-                httpRequest, HttpResponse.BodyHandlers.ofString()
-        ).exceptionally(ex -> {
-            getLogger().warning("Webhook failed: " + ex.getMessage());
-            return null;
-        });
+
+        httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
+                .exceptionally(ex -> {
+                    getLogger().warning("Webhook to " + url + " failed: " + ex.getMessage());
+                    return null;
+                });
     }
 }

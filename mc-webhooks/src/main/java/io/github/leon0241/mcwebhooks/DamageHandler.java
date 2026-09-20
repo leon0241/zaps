@@ -60,6 +60,7 @@ public final class DamageHandler implements Listener {
             jsonString.put("Damage", damage);
         }
 
+        getLogger().info(jsonString.toJSONString());
         webhook.sendWebhook(jsonString);
         getLogger().info(string);
         getLogger().info("");
