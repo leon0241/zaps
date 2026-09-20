@@ -1,12 +1,17 @@
 {
   "settings": {
-    "seconds_per_damage": 0.1,
+    "seconds_per_damage": 0.5,
     "max_duration_seconds": 2.0,
     "high_damage_threshold": 5.0,
-    "high_damage_pins": [0,1],
+    "high_damage_pins": [0, 1],
     "active_high": false
   },
   "names": {
-    "test": [2, 3]
+    "AulrenT": [2, 3],
+    "Leon024": [4, 5],
+    "JustImagine436": [6, 7],
+    "static_orbit": [8, 9],
+    "rankquasar64914": [10, 11],
+    "cado47": [12, 13]
   }
 }
