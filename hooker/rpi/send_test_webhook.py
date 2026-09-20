@@ -11,7 +11,6 @@ from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-
 DEFAULT_DATA_FILE = Path(__file__).with_name("dummy_webhook.json")
 
 

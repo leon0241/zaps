@@ -13,6 +13,9 @@ public class Webhook {
 
     public void sendWebhook(JSONObject request) {
         var url = "http://127.0.0.1:5000/webhook";
+        getLogger().info(url);
+        getLogger().info(request.toJSONString());
+
         HttpClient httpClient = HttpClient.newHttpClient();
 //            String json = new DiscordWebhookRequestDto(request).toJson();
         HttpRequest httpRequest = HttpRequest.newBuilder()

@@ -1,19 +1,19 @@
 from time import sleep
-import gpiozero as GPIO
 
+import gpiozero as GPIO
 
 relay_pulse_seconds = 1
 MAX_DURATION = 2.0
 
 terminals: dict[str, list[tuple[int, int]]] = {
-    #"t1": [(0, 1), (2, 3)],
+    # "t1": [(0, 1), (2, 3)],
     # "t1": [(1, 2), (3, 4)],
-    #"t2": [(4, 5), (6, 7)],
+    # "t2": [(4, 5), (6, 7)],
     "t3": [(8, 9), (10, 11)],
     "t4": [(12, 13), (14, 15)],
     "t5": [(16, 17), (18, 19)],
     "t6": [(20, 21), (22, 23)],
-    #"tX": [(24, 25), (24, 25)]
+    # "tX": [(24, 25), (24, 25)]
 }
 
 
@@ -36,10 +36,8 @@ class Relay:
     def coil_on(self):
         self.a.on()
         self.b.on()
-    
+
     def zap(self, duration=1):
         self.coil_on()
         sleep(duration)
         self.coil_off()
-
-

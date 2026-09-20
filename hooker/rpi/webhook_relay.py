@@ -12,7 +12,6 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-
 LOG = logging.getLogger("webhook-relay")
 
 
@@ -121,6 +120,7 @@ class RelayController:
 
     def pulse(self, name: str, damage: float | None, *, death: bool = False) -> float:
         if name not in self._outputs:
+            print(name)
             raise KeyError(name)
         if not death and (damage is None or damage <= 0):
             raise ValueError("damage must be greater than zero")
@@ -234,7 +234,9 @@ def make_handler(controller: RelayController) -> type[BaseHTTPRequestHandler]:
                 source = payload.get("Source")
                 if not isinstance(source, str) or not source:
                     raise ValueError("Source must be a non-empty string")
-                damage = None if death else positive_number(payload.get("Damage"), "Damage")
+                damage = (
+                    None if death else positive_number(payload.get("Damage"), "Damage")
+                )
                 duration = controller.pulse(player, damage, death=death)
             except KeyError:
                 self.send_json(404, {"error": "Player is not configured"})
@@ -288,7 +290,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s"
+    )
     controller = RelayController(load_config(args.config), dry_run=args.dry_run)
     server = ThreadingHTTPServer((args.host, args.port), make_handler(controller))
 

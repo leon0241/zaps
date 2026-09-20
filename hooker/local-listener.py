@@ -4,6 +4,7 @@ from typing import Any
 from flask import Flask, jsonify, request
 from pythonosc.udp_client import SimpleUDPClient
 
+from rpi.webhook_relay import RelayController, load_config, parse_args
 from utils.payload import Payload
 
 app = Flask(__name__)
@@ -22,6 +23,10 @@ def hello_world():
     return "<h1 style='font-size: 100'>Total Hits: " + str(counter) + "<h1>"
 
 
+args = parse_args()
+controller = RelayController(load_config(args.config), dry_run=True)
+
+
 @app.route("/webhook", methods=["POST"])
 def webhook_receiver():
     global counter
@@ -31,6 +36,8 @@ def webhook_receiver():
 
     payload: Payload = Payload()
     payload.unpack_json(data)
+
+    _ = controller.pulse(payload.get_player(), payload.get_damage())
 
     # Process the data and perform actions based on the event
     print("Received webhook data:", payload.get_damage())
