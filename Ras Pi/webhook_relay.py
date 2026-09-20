@@ -118,7 +118,7 @@ class RelayController:
 
     def duration_for(self, damage: float) -> float:
         if damage >= 5:
-            damage = damage-5
+            damage = damage-4.5
         return min(damage * self.seconds_per_damage, self.max_duration)
 
     def pulse(self, name: str, damage: float | None, *, death: bool = False) -> float:
