@@ -117,8 +117,8 @@ class RelayController:
         return sorted(self._outputs)
 
     def duration_for(self, damage: float) -> float:
-        if damage >= 5:
-            damage = damage-4.5
+        if damage >= 3.5:
+            damage = damage-3
         return min(damage * self.seconds_per_damage, self.max_duration)
 
     def pulse(self, name: str, damage: float | None, *, death: bool = False) -> float:
@@ -128,7 +128,7 @@ class RelayController:
             raise ValueError("damage must be greater than zero")
 
         duration = self.max_duration if death else self.duration_for(damage)
-        high_damage = damage is not None and damage > self.high_damage_threshold
+        high_damage = damage is not None and damage > self.high_damage_threshold or death
         # The high/low selector is shared by every player, so serialize all
         # pulses to prevent simultaneous events from selecting different modes.
         with self._pulse_lock:

@@ -2,7 +2,7 @@
   "settings": {
     "seconds_per_damage": 0.2,
     "max_duration_seconds": 2.0,
-    "high_damage_threshold": 5.0,
+    "high_damage_threshold": 3.5,
     "high_damage_pins": [0, 1],
     "active_high": false
   },
