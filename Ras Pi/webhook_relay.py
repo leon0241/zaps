@@ -171,7 +171,7 @@ class RelayController:
 
 def positive_number(value: Any, field: str) -> float:
     if isinstance(value, bool):
-        raise ValueError(f"{field} must be a positive number")
+        raise ValueError(f"{field} must be a positive number, bool")
     try:
         number = float(value)
     except (TypeError, ValueError) as exc:
